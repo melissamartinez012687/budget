@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Household Budget</title>
+<meta name="theme-color" content="#a3471d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Budget">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(48px,calc(env(safe-area-inset-bottom) + 32px))}</style>
+
+<style>
+:root{--bg:#fff;--paper:#f7f3ef;--text:#1a1410;--muted:#6a5d54;--line:#e4d8ce;--accent:#a3471d;--accent-soft:rgba(163,71,29,.12);--danger:#b42318;--ok:#1f7a46}
+@media (prefers-color-scheme:dark){:root{--bg:#161310;--paper:#221c18;--text:#f3ece6;--muted:#b5a79c;--line:#3a312b;--accent:#f0a36c;--accent-soft:rgba(240,163,108,.16);--danger:#ff7a6e;--ok:#5dce8a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:720px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:1.55rem;margin:6px 0 4px}
+h2{font-size:1.2rem;margin:0 0 10px}
+h3{font-size:.95rem;margin:14px 0 8px;color:var(--muted);font-weight:700;text-transform:none}
+p{margin:6px 0}.muted{color:var(--muted)}.small{font-size:.85rem}
+label{display:block;font-size:.85rem;color:var(--muted);margin:0 0 4px}
+input,textarea,select{font:inherit;font-size:16px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:50px;width:100%}
+input,textarea{-webkit-appearance:none;appearance:none}
+select{-webkit-appearance:menulist;appearance:auto}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;min-height:110px;resize:vertical}
+button{font:inherit;font-size:16px;min-height:50px;padding:12px 18px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);cursor:pointer;touch-action:manipulation}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.danger{color:var(--danger)}
+button.link{background:none;border:none;color:var(--accent);text-decoration:underline;padding:6px 0;min-height:44px;text-align:left}
+.acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+button.ed{min-height:44px;min-width:56px;padding:6px 12px;font-size:15px;color:var(--accent)}
+button.rm{min-height:44px;min-width:44px;padding:6px 10px;color:var(--danger);font-size:20px;line-height:1}
+.clr{position:relative}.clr input{padding-right:52px}
+.clr .x{position:absolute;right:4px;top:50%;transform:translateY(-50%);min-height:44px;width:44px;padding:0;border:none;background:transparent;color:var(--muted);font-size:26px;line-height:1}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}.row>*{flex:1 1 160px}
+.box{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px;margin:14px 0}
+.week{margin:18px 0}
+.chk{display:flex;align-items:center;gap:8px;min-height:44px;margin:0}.chk input{width:24px;height:24px;min-height:0;padding:0;width:24px;-webkit-appearance:checkbox;appearance:auto;flex:none}
+.noscript{border:2px solid var(--danger);border-radius:12px;padding:12px 14px;margin:12px 0}
+.note{border-left:4px solid var(--accent);background:var(--paper);padding:12px 14px;border-radius:8px;margin:10px 0}
+.hide{display:none!important}
+#msg,#xlmsg,#cpmsg,#clearMsg{color:var(--muted);min-height:1.2em}
+.neg{color:var(--danger);font-weight:700}
+.month-sum{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:520px){.month-sum{grid-template-columns:1fr 1fr 1fr}}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.stat .lbl{display:block;color:var(--muted);font-size:.85rem;margin:0 0 2px}
+.stat .val{font-variant-numeric:tabular-nums;font-size:1.35rem;font-weight:700}
+.inc,.bill{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 10px}
+.bill.paid .nm-in{text-decoration:line-through;opacity:.72}
+.bill.editing,.inc.editing{outline:2px solid var(--accent);outline-offset:1px}
+.grid2{display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:560px){.grid2{grid-template-columns:1fr 1fr}.inc .span2,.bill .span2{grid-column:1/-1}}
+.flags{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.ilist{list-style:none;margin:0;padding:0}
+.ilist li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.ilist li:last-child{border-bottom:none}
+.ilist .who{font-weight:600}
+.wsum{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.wsum .totals{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;font-variant-numeric:tabular-nums}
+.wsum .totals b{font-size:1.05rem}
+.wsum .full{grid-column:1/-1}
+.cpout{width:100%;min-height:5em;font:16px/1.4 ui-monospace,Menlo,monospace;white-space:pre;overflow:auto;-webkit-user-select:text;user-select:text}
+.cp{margin:8px 0}
+@media(max-width:600px){.row>button{flex:1 1 100%}}
+</style>
+</head>
+<body>
+<main>
+<noscript><div class="noscript"><b>Scripts are off in this viewer.</b> The tracker, totals, Copy, and Excel buttons need JavaScript, which this viewer (for example the Files app preview) does not run. Open this file in Safari or Chrome (Share, then Open in Safari, or save to Files and open it).</div></noscript>
+<h1>Household Budget</h1>
+<p class="muted">Four weeks in one month. Enter income and bills, mark what’s paid, and watch what’s left — with a running balance from week to week.</p>
+
+<div class="box">
+<label for="monthLabel">Month</label>
+<div class="clr"><input id="monthLabel" type="text" autocomplete="off" placeholder="e.g. November 2026"><button type="button" class="x hide" data-clear="monthLabel" aria-label="Clear month">&times;</button></div>
+</div>
+
+<section class="box" aria-labelledby="msHead">
+<h2 id="msHead">This month</h2>
+<div class="month-sum">
+  <div class="stat"><span class="lbl">Total income</span><div class="val" id="mInc">$0.00</div></div>
+  <div class="stat"><span class="lbl">Total bills</span><div class="val" id="mBills">$0.00</div></div>
+  <div class="stat"><span class="lbl">Total leftover</span><div class="val" id="mLeft">$0.00</div></div>
+</div>
+<p class="small muted" id="mPaid" style="margin-top:10px"></p>
+</section>
+
+<section class="box" aria-labelledby="incHead">
+<h2 id="incHead">Income sources</h2>
+<p class="muted small">Weekly pay is counted in every week. Once-a-month pay is counted only in the week you pick.</p>
+<div id="incomes"></div>
+<div class="row"><button type="button" id="addIncome">Add income</button></div>
+</section>
+
+<div id="weeks"></div>
+
+<section class="box">
+<div class="row">
+<button type="button" id="copy">Copy for sheet</button>
+<button type="button" id="xlsx">Download to Excel</button>
+</div>
+<div class="row" id="cpopts"><label class="chk"><input type="checkbox" id="cphead"> Include header row when copying for a sheet</label></div>
+<div class="small cp" id="cpmsg"></div>
+<textarea class="cpout hide" id="cpout" readonly aria-label="Copied rows"></textarea>
+<div id="xlmsg" class="small" role="status"></div>
+<div class="row">
+<button type="button" id="newMonth">Start new month</button>
+<button type="button" class="danger" id="clear">Clear all</button>
+</div>
+<div id="clearMsg" class="small" role="status"></div>
+</section>
+</main>
+<script>
+(function(){
+"use strict";
+var LS="household-budget-v1";
+var SHEET_HEAD=["Week","Type","Name","Amount","Due","Paid"];
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var monthLabel="", nextId=1, incomes=[], bills=[], undoBuf=null, memStore=null, lastCopy=null;
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function r2(n){n=Number(n)||0;return Math.round(+(n*100).toPrecision(12))/100;}
+function money(n){if(n==null||!isFinite(Number(n)))return "—";n=r2(n);return(n<0?"-$":"$")+Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function num(s){var raw=String(s==null?"":s);var neg=/^\s*\(.*\)\s*$/.test(raw);var m=raw.replace(/,/g,"").match(/-?\d*\.?\d+/);if(!m)return 0;var n=parseFloat(m[0]);if(!isFinite(n))return 0;return neg?-Math.abs(n):n;}
+function cents(s){return Math.round(r2(num(s))*100);}
+function fromCents(c){return r2((Number(c)||0)/100);}
+function clampWeek(w){w=parseInt(w,10);if(!isFinite(w)||w<1)return 1;if(w>4)return 4;return w;}
+function defaultMonthLabel(){try{return new Date().toLocaleString("en-US",{month:"long",year:"numeric"});}catch(e){return "November 2026";}}
+function advanceMonth(label){
+  var m=String(label||"").trim().match(/^([A-Za-z]+)\s+(\d{4})$/);
+  if(!m) return label||defaultMonthLabel();
+  var i=-1, name=m[1].toLowerCase();
+  for(var k=0;k<12;k++) if(MONTHS[k].toLowerCase()===name) i=k;
+  if(i<0) return label;
+  var y=+m[2]; i++; if(i>11){i=0;y++;}
+  return MONTHS[i]+" "+y;
+}
+function lsGet(k){try{return window.localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{window.localStorage.setItem(k,v);return true;}catch(e){memStore=v;return false;}}
+function nameGet(){try{var n=String(window.name||"");return n.indexOf("hbudget:")===0?n.slice(8):null;}catch(e){return null;}}
+function nameSet(v){try{window.name="hbudget:"+v;}catch(e){}}
+
+function defaultState(){
+  return {
+    monthLabel: defaultMonthLabel(),
+    nextId: 6,
+    incomes: [
+      {id:1, name:"Husband paycheck", amount:"800", freq:"weekly", week:1},
+      {id:2, name:"Melissa income", amount:"4000", freq:"monthly", week:1},
+      {id:3, name:"Melissa income", amount:"1000", freq:"monthly", week:3}
+    ],
+    /* Exactly one Car Payment for the month (not one per week). Amount left blank for Melissa to fill in. Debt Payment $350 lands in Week 4. */
+    bills: [
+      {id:4, name:"Car Payment", amount:"", due:"", week:1, paid:false, recurring:true},
+      {id:5, name:"Debt Payment", amount:"350", due:"", week:4, paid:false, recurring:true}
+    ]
+  };
+}
+function newIncome(){return {id:nextId++, name:"", amount:"", freq:"monthly", week:1};}
+function newBill(week){return {id:nextId++, name:"", amount:"", due:"", week:clampWeek(week), paid:false, recurring:false};}
+function findInc(id){id=+id;for(var i=0;i<incomes.length;i++) if(incomes[i].id===id) return incomes[i];return null;}
+function findBill(id){id=+id;for(var i=0;i<bills.length;i++) if(bills[i].id===id) return bills[i];return null;}
+function incomeInWeek(inc,w){if(!inc) return false;if(inc.freq==="weekly") return true;return clampWeek(inc.week)===w;}
+function weekIncomes(w){return incomes.filter(function(inc){return incomeInWeek(inc,w);});}
+function weekBills(w){return bills.filter(function(b){return clampWeek(b.week)===w;});}
+function sumCents(list, field){return list.reduce(function(s,x){return s+cents(x[field]);},0);}
+function weekIncomeCents(w){return sumCents(weekIncomes(w),"amount");}
+function weekBillCents(w){return sumCents(weekBills(w),"amount");}
+function weekPaidCents(w){return sumCents(weekBills(w).filter(function(b){return !!b.paid;}),"amount");}
+function weekUnpaidCents(w){return weekBillCents(w)-weekPaidCents(w);}
+function weekLeftCents(w){return weekIncomeCents(w)-weekBillCents(w);}
+function runningAfter(w){var r=0;for(var i=1;i<=w;i++) r+=weekLeftCents(i);return r;}
+function monthIncomeCents(){var t=0;for(var w=1;w<=4;w++) t+=weekIncomeCents(w);return t;}
+function monthBillCents(){return sumCents(bills,"amount");}
+function monthPaidCents(){return sumCents(bills.filter(function(b){return !!b.paid;}),"amount");}
+
+function cloneState(){return JSON.parse(JSON.stringify({monthLabel:monthLabel,nextId:nextId,incomes:incomes,bills:bills}));}
+function applyState(s){
+  monthLabel=s.monthLabel||defaultMonthLabel();
+  nextId=s.nextId||1;
+  incomes=(s.incomes||[]).map(normalizeInc);
+  bills=(s.bills||[]).map(normalizeBill);
+  var max=0;
+  incomes.concat(bills).forEach(function(x){if(x.id>max)max=x.id;});
+  if(nextId<=max) nextId=max+1;
+}
+function normalizeInc(x){
+  return {id:+x.id||nextId++, name:String(x.name||""), amount:x.amount==null?"":String(x.amount), freq:x.freq==="weekly"?"weekly":"monthly", week:clampWeek(x.week||1)};
+}
+function normalizeBill(x){
+  return {id:+x.id||nextId++, name:String(x.name||""), amount:x.amount==null?"":String(x.amount), due:String(x.due||""), week:clampWeek(x.week||1), paid:!!x.paid, recurring:!!x.recurring};
+}
+
+function saveStore(){
+  var v=JSON.stringify(cloneState());
+  var ok=lsSet(LS,v);nameSet(v);return ok;
+}
+function loadStore(){
+  var raw=lsGet(LS)||nameGet()||memStore;
+  try{
+    var d=JSON.parse(raw||"null");
+    if(d&&Array.isArray(d.incomes)&&Array.isArray(d.bills)){
+      applyState(d);
+      return true;
+    }
+  }catch(e){}
+  applyState(defaultState());
+  return false;
+}
+
+function incomeRow(inc){
+  var wHide=inc.freq==="weekly"?" hide":"";
+  return '<div class="inc" id="inc-'+inc.id+'" data-income="'+inc.id+'">'+
+    '<div class="grid2">'+
+      '<div class="span2"><label for="inc-name-'+inc.id+'">Name</label><div class="clr"><input id="inc-name-'+inc.id+'" type="text" autocomplete="off" data-kind="income" data-field="name" data-id="'+inc.id+'" value="'+esc(inc.name)+'" placeholder="e.g. Side job"><button type="button" class="x hide" data-clear="inc-name-'+inc.id+'" aria-label="Clear name">&times;</button></div></div>'+
+      '<div><label for="inc-amt-'+inc.id+'">Amount $</label><div class="clr"><input id="inc-amt-'+inc.id+'" type="text" inputmode="decimal" autocomplete="off" data-kind="income" data-field="amount" data-id="'+inc.id+'" value="'+esc(inc.amount)+'" placeholder="0.00"><button type="button" class="x hide" data-clear="inc-amt-'+inc.id+'" aria-label="Clear amount">&times;</button></div></div>'+
+      '<div><label for="inc-freq-'+inc.id+'">When</label><select id="inc-freq-'+inc.id+'" data-kind="income" data-field="freq" data-id="'+inc.id+'"><option value="weekly"'+(inc.freq==="weekly"?" selected":"")+'>Every week</option><option value="monthly"'+(inc.freq==="monthly"?" selected":"")+'>Once a month</option></select></div>'+
+      '<div class="inc-week'+wHide+'" id="inc-week-wrap-'+inc.id+'"><label for="inc-week-'+inc.id+'">Which week</label><select id="inc-week-'+inc.id+'" data-kind="income" data-field="week" data-id="'+inc.id+'">'+weekOpts(inc.week)+'</select></div>'+
+    '</div>'+
+    '<div class="acts" style="margin-top:8px"><button type="button" class="ed" data-edit-income="'+inc.id+'">Edit</button><button type="button" class="rm" data-rm-income="'+inc.id+'" aria-label="Remove income" title="Remove income">&times;</button></div>'+
+  '</div>';
+}
+function weekOpts(sel){
+  var h="";
+  for(var w=1;w<=4;w++) h+='<option value="'+w+'"'+(clampWeek(sel)===w?" selected":"")+'>Week '+w+(w===4?" (last week)":"")+'</option>';
+  return h;
+}
+function billRow(b){
+  return '<div class="bill'+(b.paid?" paid":"")+'" id="bill-'+b.id+'" data-bill="'+b.id+'">'+
+    '<div class="grid2">'+
+      '<div class="span2"><label for="bill-name-'+b.id+'">Name</label><div class="clr"><input id="bill-name-'+b.id+'" class="nm-in" type="text" autocomplete="off" data-kind="bill" data-field="name" data-id="'+b.id+'" value="'+esc(b.name)+'" placeholder="e.g. Electric"><button type="button" class="x hide" data-clear="bill-name-'+b.id+'" aria-label="Clear name">&times;</button></div></div>'+
+      '<div><label for="bill-amt-'+b.id+'">Amount $</label><div class="clr"><input id="bill-amt-'+b.id+'" type="text" inputmode="decimal" autocomplete="off" data-kind="bill" data-field="amount" data-id="'+b.id+'" value="'+esc(b.amount)+'" placeholder="0.00"><button type="button" class="x hide" data-clear="bill-amt-'+b.id+'" aria-label="Clear amount">&times;</button></div></div>'+
+      '<div><label for="bill-due-'+b.id+'">Due date (optional)</label><input id="bill-due-'+b.id+'" type="date" data-kind="bill" data-field="due" data-id="'+b.id+'" value="'+esc(b.due)+'"></div>'+
+      '<div><label for="bill-week-'+b.id+'">Week</label><select id="bill-week-'+b.id+'" data-kind="bill" data-field="week" data-id="'+b.id+'">'+weekOpts(b.week)+'</select></div>'+
+    '</div>'+
+    '<div class="flags">'+
+      '<label class="chk"><input type="checkbox" data-kind="bill" data-field="paid" data-id="'+b.id+'"'+(b.paid?" checked":"")+'> Paid</label>'+
+      '<label class="chk"><input type="checkbox" data-kind="bill" data-field="recurring" data-id="'+b.id+'"'+(b.recurring?" checked":"")+'> Recurring monthly</label>'+
+      '<div class="acts"><button type="button" class="ed" data-edit-bill="'+b.id+'">Edit</button><button type="button" class="rm" data-rm-bill="'+b.id+'" aria-label="Delete bill" title="Delete bill">&times;</button></div>'+
+    '</div>'+
+  '</div>';
+}
+function weekSection(w){
+  return '<section class="week box" id="week-'+w+'" data-week="'+w+'">'+
+    '<h2>Week '+w+'</h2>'+
+    '<h3>Income this week</h3>'+
+    '<ul class="ilist" id="inc-list-'+w+'"></ul>'+
+    '<h3>Bills</h3>'+
+    '<div id="bills-'+w+'"></div>'+
+    '<div class="row"><button type="button" data-add-bill="'+w+'">Add bill</button></div>'+
+    '<div class="wsum" id="sum-'+w+'"></div>'+
+  '</section>';
+}
+
+function renderIncomes(){
+  $("incomes").innerHTML=incomes.length?incomes.map(incomeRow).join(""):'<p class="muted" id="incEmpty">No income sources yet. Tap Add income.</p>';
+  syncX();
+}
+function renderWeekShells(){
+  var h="";
+  for(var w=1;w<=4;w++) h+=weekSection(w);
+  $("weeks").innerHTML=h;
+}
+function renderWeekIncomes(){
+  for(var w=1;w<=4;w++){
+    var list=weekIncomes(w), el=$("inc-list-"+w);
+    if(!el) continue;
+    if(!list.length){el.innerHTML='<li class="muted">No income this week.</li>';continue;}
+    el.innerHTML=list.map(function(inc){
+      return '<li data-inc-show="'+inc.id+'"><span class="who">'+esc(inc.name||"Income")+'</span><span>'+esc(money(fromCents(cents(inc.amount))))+'</span></li>';
+    }).join("");
+  }
+}
+function renderBills(){
+  for(var w=1;w<=4;w++){
+    var list=weekBills(w), el=$("bills-"+w);
+    if(!el) continue;
+    el.innerHTML=list.length?list.map(billRow).join(""):'<p class="muted" data-empty-bills="'+w+'">No bills in this week yet.</p>';
+  }
+  syncX();
+}
+function setMoney(el, n){
+  if(!el) return;
+  el.textContent=money(fromCents(n));
+  el.classList.toggle("neg", n<0);
+}
+function updateSummaries(){
+  var mInc=monthIncomeCents(), mBill=monthBillCents(), mLeft=mInc-mBill, mPaid=monthPaidCents();
+  setMoney($("mInc"), mInc);
+  setMoney($("mBills"), mBill);
+  setMoney($("mLeft"), mLeft);
+  $("mPaid").textContent="Paid "+money(fromCents(mPaid))+" · Unpaid "+money(fromCents(mBill-mPaid));
+  for(var w=1;w<=4;w++){
+    var inc=weekIncomeCents(w), bill=weekBillCents(w), paid=weekPaidCents(w), unpaid=bill-paid, left=inc-bill, run=runningAfter(w);
+    var el=$("sum-"+w);
+    if(!el) continue;
+    el.innerHTML='<div class="totals">'+
+      '<div>Income<br><b>'+esc(money(fromCents(inc)))+'</b></div>'+
+      '<div>Bills<br><b>'+esc(money(fromCents(bill)))+'</b></div>'+
+      '<div>Paid<br><b>'+esc(money(fromCents(paid)))+'</b></div>'+
+      '<div>Unpaid<br><b>'+esc(money(fromCents(unpaid)))+'</b></div>'+
+      '<div>Leftover<br><b class="'+(left<0?"neg":"")+'">'+esc(money(fromCents(left)))+'</b></div>'+
+      '<div>Running balance<br><b class="'+(run<0?"neg":"")+'">'+esc(money(fromCents(run)))+'</b></div>'+
+    '</div>';
+  }
+}
+function renderAll(){
+  if($("monthLabel")) $("monthLabel").value=monthLabel;
+  renderIncomes();
+  renderWeekShells();
+  renderWeekIncomes();
+  renderBills();
+  updateSummaries();
+  syncX();
+}
+
+function focusEdit(id){
+  var el=$(id);
+  if(!el) return;
+  var wrap=el.closest(".inc,.bill");
+  if(wrap){
+    wrap.classList.add("editing");
+    setTimeout(function(){wrap.classList.remove("editing");},1600);
+  }
+  try{el.focus();el.scrollIntoView({block:"center",behavior:"smooth"});}catch(e){}
+}
+
+function startNewMonth(){
+  if(!window.confirm("Start a new month?\n\nIncome sources and recurring bills will be kept. Paid checkmarks will be cleared, and one-time bills will be removed.")) return;
+  undoBuf={kind:"month", state:cloneState()};
+  monthLabel=advanceMonth(monthLabel);
+  if($("monthLabel")) $("monthLabel").value=monthLabel;
+  bills=bills.filter(function(b){return !!b.recurring;}).map(function(b){
+    var c=normalizeBill(b); c.paid=false; return c;
+  });
+  renderBills();
+  updateSummaries();
+  saveStore();
+  $("clearMsg").innerHTML='New month started. Recurring bills were kept and marked unpaid. <button type="button" id="undoClear">Undo</button>';
+}
+function clearAll(){
+  if(!window.confirm("Clear everything and reset to the starting income and bills? You can undo after.")) return;
+  undoBuf={kind:"clear", state:cloneState()};
+  applyState(defaultState());
+  renderAll();
+  saveStore();
+  $("clearMsg").innerHTML='Cleared. <button type="button" id="undoClear">Undo</button>';
+}
+function undoLast(){
+  if(!undoBuf||!undoBuf.state) return;
+  applyState(undoBuf.state);
+  undoBuf=null;
+  renderAll();
+  saveStore();
+  $("clearMsg").textContent="Restored.";
+}
+
+function sheetRows(head){
+  var rows=head?[SHEET_HEAD.slice()]:[];
+  for(var w=1;w<=4;w++){
+    weekIncomes(w).forEach(function(inc){
+      rows.push(["Week "+w,"Income",inc.name||"Income",r2(fromCents(cents(inc.amount))),"",""]);
+    });
+    weekBills(w).forEach(function(b){
+      rows.push(["Week "+w,"Bill",b.name||"Bill",r2(fromCents(cents(b.amount))),b.due||"",b.paid?"Yes":"No"]);
+    });
+  }
+  return rows;
+}
+function sheetText(head){
+  return sheetRows(head).map(function(r){
+    return [r[0],r[1],r[2], typeof r[3]==="number"?r2(r[3]).toFixed(2):r[3], r[4]||"", r[5]||""].join("\t");
+  }).join("\n");
+}
+function fallbackCopy(ta){try{ta.removeAttribute("readonly");ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);var ok=document.execCommand("copy");ta.setAttribute("readonly","");ta.blur();return ok;}catch(e){try{ta.setAttribute("readonly","");}catch(e2){}return false;}}
+function doCopy(){
+  var head=$("cphead")&&$("cphead").checked, rows=sheetRows(head), text=sheetText(head);
+  var n=head?rows.length-1:rows.length;
+  var ta=$("cpout"), m=$("cpmsg");
+  ta.value=text;ta.classList.remove("hide");ta.rows=Math.min(16,rows.length+1);
+  var base="Copied "+n+" row"+(n===1?"":"s")+(head?" plus header":"")+". Paste into cell A1 of your sheet.";
+  var fail="Couldn't copy automatically here. Long-press the text below, choose Select All, then Copy.";
+  if(!n){m.textContent="Nothing to copy yet.";return;}
+  function done(ok){var t=ok?base:fail;m.textContent=t;lastCopy={text:text,msg:t};window.__lastCopy={text:text,ok:ok};}
+  if(navigator.clipboard&&navigator.clipboard.writeText&&window.isSecureContext!==false){
+    navigator.clipboard.writeText(text).then(function(){done(true);},function(){done(fallbackCopy(ta));});
+  }else done(fallbackCopy(ta));
+}
+
+/* ---- xlsx (STORE zip) ---- */
+function utf8(s){s=String(s);if(typeof TextEncoder!=="undefined")return new TextEncoder().encode(s);var b=unescape(encodeURIComponent(s)),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+var CRCT=(function(){var t=new Uint32Array(256);for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u){var c=0xFFFFFFFF;for(var i=0;i<u.length;i++)c=CRCT[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+function zipStore(files){var d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+var parts=[],central=[],off=0;
+files.forEach(function(f){var name=utf8(f.name),data=utf8(f.data),crc=crc32(data);
+var lh=new Uint8Array(30+name.length),v=new DataView(lh.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x0800,true);v.setUint16(8,0,true);v.setUint16(10,tm,true);v.setUint16(12,dt,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);v.setUint16(28,0,true);lh.set(name,30);
+var ch=new Uint8Array(46+name.length),w=new DataView(ch.buffer);w.setUint32(0,0x02014b50,true);w.setUint16(4,20,true);w.setUint16(6,20,true);w.setUint16(8,0x0800,true);w.setUint16(10,0,true);w.setUint16(12,tm,true);w.setUint16(14,dt,true);w.setUint32(16,crc,true);w.setUint32(20,data.length,true);w.setUint32(24,data.length,true);w.setUint16(28,name.length,true);w.setUint32(42,off,true);ch.set(name,46);
+parts.push(lh,data);central.push(ch);off+=lh.length+data.length;});
+var cdSize=central.reduce(function(s,c){return s+c.length;},0);var e=new Uint8Array(22),ev=new DataView(e.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);ev.setUint32(12,cdSize,true);ev.setUint32(16,off,true);
+var all=parts.concat(central,[e]),total=all.reduce(function(s,a){return s+a.length;},0),out=new Uint8Array(total),p=0;all.forEach(function(a){out.set(a,p);p+=a.length;});return out;}
+function xe(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"");}
+function colL(i){return String.fromCharCode(65+i);}
+function cellXML(ref,v,bold){if(v==null||v==="")return bold?'<c r="'+ref+'" s="1"/>':"";if(typeof v==="string")return'<c r="'+ref+'" t="inlineStr"'+(bold?' s="1"':"")+'><is><t xml:space="preserve">'+xe(v)+"</t></is></c>";if(typeof v==="number")v={v:v,s:0};return'<c r="'+ref+'"'+(v.s?' s="'+v.s+'"':"")+">"+(v.f?"<f>"+xe(v.f)+"</f>":"")+"<v>"+v.v+"</v></c>";}
+function sheetXML(head,rows,widths,first){var h='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView'+(first?' tabSelected="1"':"")+' workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>'+widths.map(function(w,i){return'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>';}).join("")+"</cols><sheetData>";
+h+='<row r="1">'+head.map(function(t,i){return cellXML(colL(i)+"1",t,true);}).join("")+"</row>";
+rows.forEach(function(r,ri){var R=ri+2;h+='<row r="'+R+'">'+r.map(function(v,i){return cellXML(colL(i)+R,v,r.bold&&typeof v==="string");}).join("")+"</row>";});
+return h+'</sheetData><pageMargins left="0.5" right="0.5" top="0.75" bottom="0.75" header="0.3" footer="0.3"/></worksheet>';}
+function money2(v){return{v:r2(v),s:2};}
+
+function summaryRows(){
+  var rows=[], run=0;
+  for(var w=1;w<=4;w++){
+    var inc=fromCents(weekIncomeCents(w)), bill=fromCents(weekBillCents(w)), paid=fromCents(weekPaidCents(w)), left=r2(inc-bill);
+    run=r2(run+left);
+    rows.push(["Week "+w, money2(inc), money2(bill), money2(paid), money2(bill-paid), money2(left), money2(run)]);
+  }
+  var tot=["TOTAL", money2(fromCents(monthIncomeCents())), money2(fromCents(monthBillCents())), money2(fromCents(monthPaidCents())), money2(fromCents(monthBillCents()-monthPaidCents())), money2(fromCents(monthIncomeCents()-monthBillCents())), money2(fromCents(runningAfter(4)))];
+  tot.bold=true;rows.push(tot);
+  return rows;
+}
+function detailRows(){
+  var rows=[];
+  sheetRows(false).forEach(function(r){
+    rows.push([r[0], r[1], r[2], money2(r[3]), r[4]||"", r[5]||""]);
+  });
+  return rows;
+}
+function buildXLSX(){
+  var sheets=[
+    {name:"Summary",xml:sheetXML(["Week","Income","Bills","Paid","Unpaid","Leftover","Running"],summaryRows(),[14,14,14,14,14,14,14],true)},
+    {name:"Details",xml:sheetXML(SHEET_HEAD,detailRows(),[12,12,28,14,14,10])}
+  ];
+  var files=[];
+  files.push({name:"[Content_Types].xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map(function(s,i){return'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';}).join("")+"</Types>"});
+  files.push({name:"_rels/.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'});
+  files.push({name:"xl/workbook.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0" firstSheet="0"/></bookViews><sheets>'+sheets.map(function(s,i){return'<sheet name="'+xe(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>';}).join("")+'</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>'});
+  files.push({name:"xl/_rels/workbook.xml.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map(function(s,i){return'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>';}).join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'});
+  files.push({name:"xl/styles.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="0.00%"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'});
+  sheets.forEach(function(s,i){files.push({name:"xl/worksheets/sheet"+(i+1)+".xml",data:s.xml});});
+  return zipStore(files);
+}
+function xlName(){var d=new Date();function z(n){return(n<10?"0":"")+n;}var slug=String(monthLabel||"budget").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase();return"household-budget-"+(slug?slug+"-":"")+d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())+".xlsx";}
+function xlStatus(t){$("xlmsg").textContent=t;}
+function isStandalone(){try{return window.navigator.standalone===true||(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches);}catch(e){return false;}}
+function isIOS(){var u=navigator.userAgent||"";return/iP(hone|ad|od)/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1);}
+function anchorDownload(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.rel="noopener";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);if(a.parentNode)a.parentNode.removeChild(a);},4000);}
+function downloadXlsx(){
+  var bytes=buildXLSX(),name=xlName(),type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  var blob=new Blob([bytes],{type:type});
+  var okMsg="Excel file ready: "+name+" (sheets: Summary, Details).";
+  var file=null;try{file=new File([bytes],name,{type:type});}catch(e){}
+  if(file&&(isStandalone()||isIOS())&&navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:name}).then(function(){xlStatus(okMsg);},function(err){
+      if(err&&err.name==="AbortError"){xlStatus("Share cancelled. Tap Download to Excel again to save "+name+".");return;}
+      try{anchorDownload(blob,name);xlStatus(okMsg);}catch(e2){xlStatus("This viewer blocked the download. Open the page in Safari and try again.");}
+    });
+    return;
+  }
+  try{anchorDownload(blob,name);xlStatus("Downloaded "+name+" (sheets: Summary, Details).");}
+  catch(e){xlStatus("This viewer blocked the download. Open the page in Safari or Chrome and try again.");}
+}
+
+/* ---- events: update in place, never rebuild rows while typing ---- */
+document.addEventListener("input",function(e){
+  var t=e.target;
+  if(!t) return;
+  if(t.id==="monthLabel"){monthLabel=t.value;syncX();saveStore();return;}
+  if(t.id&&document.querySelector('[data-clear="'+t.id+'"]')) syncX();
+  var kind=t.getAttribute("data-kind"), field=t.getAttribute("data-field"), id=+(t.getAttribute("data-id")||0);
+  if(!kind||!field||!id) return;
+  if(field==="paid"||field==="recurring"||field==="freq"||field==="week") return;
+  if(kind==="income"){
+    var inc=findInc(id); if(!inc) return;
+    inc[field]=t.value;
+    renderWeekIncomes();
+    updateSummaries();
+    saveStore();
+    return;
+  }
+  if(kind==="bill"){
+    var b=findBill(id); if(!b) return;
+    b[field]=t.value;
+    updateSummaries();
+    saveStore();
+  }
+});
+document.addEventListener("change",function(e){
+  var t=e.target; if(!t) return;
+  var kind=t.getAttribute("data-kind"), field=t.getAttribute("data-field"), id=+(t.getAttribute("data-id")||0);
+  if(!kind||!field||!id) return;
+  if(kind==="income"){
+    var inc=findInc(id); if(!inc) return;
+    if(field==="freq"){
+      inc.freq=t.value==="weekly"?"weekly":"monthly";
+      var wrap=$("inc-week-wrap-"+inc.id);
+      if(wrap) wrap.classList.toggle("hide", inc.freq==="weekly");
+    }else if(field==="week"){
+      inc.week=clampWeek(t.value);
+    }else return;
+    renderWeekIncomes();
+    updateSummaries();
+    saveStore();
+    return;
+  }
+  if(kind==="bill"){
+    var b=findBill(id); if(!b) return;
+    if(field==="paid"){
+      b.paid=!!t.checked;
+      var row=$("bill-"+b.id); if(row) row.classList.toggle("paid", b.paid);
+      updateSummaries();saveStore();return;
+    }
+    if(field==="recurring"){
+      b.recurring=!!t.checked;saveStore();return;
+    }
+    if(field==="week"){
+      b.week=clampWeek(t.value);
+      renderBills();
+      updateSummaries();
+      saveStore();
+      var el=$("bill-name-"+b.id); if(el) try{el.scrollIntoView({block:"center"});}catch(err){}
+    }
+    if(field==="due"){b.due=t.value;saveStore();}
+  }
+});
+document.addEventListener("click",function(e){
+  var t=e.target.closest&&e.target.closest("button"); if(!t) return;
+  var add=t.getAttribute("data-add-bill");
+  if(add){
+    var b=newBill(+add);
+    bills.push(b);
+    var empty=document.querySelector('[data-empty-bills="'+b.week+'"]');
+    if(empty&&empty.parentNode) empty.parentNode.removeChild(empty);
+    $("bills-"+b.week).insertAdjacentHTML("beforeend", billRow(b));
+    syncX();updateSummaries();saveStore();
+    var el=$("bill-name-"+b.id); if(el) try{el.focus();}catch(err){}
+    return;
+  }
+  if(t.getAttribute("data-rm-income")){
+    var iid=+t.getAttribute("data-rm-income");
+    incomes=incomes.filter(function(x){return x.id!==iid;});
+    var irow=$("inc-"+iid); if(irow&&irow.parentNode) irow.parentNode.removeChild(irow);
+    if(!incomes.length) renderIncomes();
+    renderWeekIncomes();updateSummaries();saveStore();
+    return;
+  }
+  if(t.getAttribute("data-rm-bill")){
+    var bid=+t.getAttribute("data-rm-bill");
+    var old=findBill(bid);
+    var wk=old?clampWeek(old.week):0;
+    bills=bills.filter(function(x){return x.id!==bid;});
+    var brow=$("bill-"+bid); if(brow&&brow.parentNode) brow.parentNode.removeChild(brow);
+    if(wk&&!weekBills(wk).length){
+      var box=$("bills-"+wk);
+      if(box&&!box.querySelector(".bill")) box.innerHTML='<p class="muted" data-empty-bills="'+wk+'">No bills in this week yet.</p>';
+    }
+    updateSummaries();saveStore();
+    return;
+  }
+  if(t.getAttribute("data-edit-income")){
+    focusEdit("inc-name-"+t.getAttribute("data-edit-income"));return;
+  }
+  if(t.getAttribute("data-edit-bill")){
+    focusEdit("bill-name-"+t.getAttribute("data-edit-bill"));return;
+  }
+  if(t.id==="addIncome"){
+    var emptyInc=$("incEmpty"); if(emptyInc&&emptyInc.parentNode=== $("incomes")) $("incomes").innerHTML="";
+    var inc=newIncome();
+    incomes.push(inc);
+    $("incomes").insertAdjacentHTML("beforeend", incomeRow(inc));
+    syncX();renderWeekIncomes();updateSummaries();saveStore();
+    var iel=$("inc-name-"+inc.id); if(iel) try{iel.focus();}catch(err){}
+    return;
+  }
+  if(t.id==="copy"){doCopy();return;}
+  if(t.id==="xlsx"){downloadXlsx();return;}
+  if(t.id==="newMonth"){startNewMonth();return;}
+  if(t.id==="clear"){clearAll();return;}
+  if(t.id==="undoClear"){undoLast();return;}
+});
+$("cpout").addEventListener("focus",function(){this.select();});
+
+function syncX(){Array.prototype.forEach.call(document.querySelectorAll("[data-clear]"),function(b){var f=$(b.getAttribute("data-clear"));b.classList.toggle("hide",!(f&&f.value));});}
+document.addEventListener("pointerdown",function(e){if(e.target.closest&&e.target.closest("[data-clear]"))e.preventDefault();});
+document.addEventListener("click",function(e){
+  var b=e.target.closest&&e.target.closest("[data-clear]");if(!b)return;
+  var id=b.getAttribute("data-clear"),f=$(id);if(!f)return;
+  f.value="";
+  var kind=f.getAttribute("data-kind"), field=f.getAttribute("data-field"), fid=+(f.getAttribute("data-id")||0);
+  if(id==="monthLabel"){monthLabel="";}
+  if(kind==="income"){var inc=findInc(fid); if(inc) inc[field]=""; renderWeekIncomes();}
+  if(kind==="bill"){var bill=findBill(fid); if(bill) bill[field]="";}
+  updateSummaries();syncX();saveStore();
+  try{f.focus();}catch(err){}
+});
+
+window.__test={
+  num:num, r2:r2, money:money, cents:cents, fromCents:fromCents,
+  defaultState:defaultState, cloneState:cloneState, applyState:applyState,
+  renderAll:renderAll, updateSummaries:updateSummaries, saveStore:saveStore, loadStore:loadStore,
+  weekIncomeCents:weekIncomeCents, weekBillCents:weekBillCents, weekPaidCents:weekPaidCents,
+  weekLeftCents:weekLeftCents, runningAfter:runningAfter, monthIncomeCents:monthIncomeCents,
+  monthBillCents:monthBillCents, sheetText:sheetText, sheetRows:sheetRows, buildXLSX:buildXLSX, xlName:xlName,
+  startNewMonth:startNewMonth, clearAll:clearAll, undoLast:undoLast, advanceMonth:advanceMonth,
+  getIncomes:function(){return incomes;}, getBills:function(){return bills;},
+  getMonthLabel:function(){return monthLabel;},
+  setConfirm:function(fn){window.confirm=fn;}
+};
+
+loadStore();
+renderAll();
+})();
+</script>
+<script>if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").then(function(r){window.__swReg=true;}).catch(function(e){window.__swErr=String(e);});});}</script>
+</body>
+</html>
