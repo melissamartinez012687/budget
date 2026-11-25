@@ -69,6 +69,10 @@ button.rm{min-height:44px;min-width:44px;padding:6px 10px;color:var(--danger);fo
 .wsum .full{grid-column:1/-1}
 .cpout{width:100%;min-height:5em;font:16px/1.4 ui-monospace,Menlo,monospace;white-space:pre;overflow:auto;-webkit-user-select:text;user-select:text}
 .cp{margin:8px 0}
+.quick{margin:8px 0 2px}
+.quick .lbl{margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{min-height:44px;padding:8px 12px;font-size:15px;border-radius:999px;font-weight:500}
 @media(max-width:600px){.row>button{flex:1 1 100%}}
 </style>
 </head>
@@ -149,24 +153,53 @@ function lsSet(k,v){try{window.localStorage.setItem(k,v);return true;}catch(e){m
 function nameGet(){try{var n=String(window.name||"");return n.indexOf("hbudget:")===0?n.slice(8):null;}catch(e){return null;}}
 function nameSet(v){try{window.name="hbudget:"+v;}catch(e){}}
 
+var QUICK_BILLS=["Rent/Mortgage","Electric","Gas","Water","Trash","Internet","Cell Phone","Car Payment","Car Insurance","Groceries","Child Support","Debt Payment"];
+function quickAmount(name){
+  if(name==="Child Support") return "300";
+  if(name==="Debt Payment") return "350";
+  return "";
+}
 function defaultState(){
   return {
     monthLabel: defaultMonthLabel(),
-    nextId: 6,
+    nextId: 16,
     incomes: [
       {id:1, name:"Husband paycheck", amount:"800", freq:"weekly", week:1},
       {id:2, name:"Melissa income", amount:"4000", freq:"monthly", week:1},
       {id:3, name:"Melissa income", amount:"1000", freq:"monthly", week:3}
     ],
-    /* Exactly one Car Payment for the month (not one per week). Amount left blank for Melissa to fill in. Debt Payment $350 lands in Week 4. */
+    /* One of each common monthly bill, spread across the four weeks. Only Child Support ($300) and Debt Payment ($350 in Week 4) have amounts; the rest start blank ($0) so Melissa can fill them in. Exactly one Car Payment. */
     bills: [
-      {id:4, name:"Car Payment", amount:"", due:"", week:1, paid:false, recurring:true},
-      {id:5, name:"Debt Payment", amount:"350", due:"", week:4, paid:false, recurring:true}
+      {id:4, name:"Rent/Mortgage", amount:"", due:"", week:1, paid:false, recurring:true},
+      {id:5, name:"Car Payment", amount:"", due:"", week:1, paid:false, recurring:true},
+      {id:6, name:"Car Insurance", amount:"", due:"", week:1, paid:false, recurring:true},
+      {id:7, name:"Electric", amount:"", due:"", week:2, paid:false, recurring:true},
+      {id:8, name:"Gas", amount:"", due:"", week:2, paid:false, recurring:true},
+      {id:9, name:"Water", amount:"", due:"", week:2, paid:false, recurring:true},
+      {id:10, name:"Trash", amount:"", due:"", week:2, paid:false, recurring:true},
+      {id:11, name:"Internet", amount:"", due:"", week:3, paid:false, recurring:true},
+      {id:12, name:"Cell Phone", amount:"", due:"", week:3, paid:false, recurring:true},
+      {id:13, name:"Child Support", amount:"300", due:"", week:3, paid:false, recurring:true},
+      {id:14, name:"Groceries", amount:"", due:"", week:4, paid:false, recurring:true},
+      {id:15, name:"Debt Payment", amount:"350", due:"", week:4, paid:false, recurring:true}
     ]
   };
 }
 function newIncome(){return {id:nextId++, name:"", amount:"", freq:"monthly", week:1};}
 function newBill(week){return {id:nextId++, name:"", amount:"", due:"", week:clampWeek(week), paid:false, recurring:false};}
+function addBillToWeek(week, name){
+  var b=newBill(week);
+  name=String(name||"");
+  if(name){b.name=name;b.amount=quickAmount(name);b.recurring=true;}
+  bills.push(b);
+  var empty=document.querySelector('[data-empty-bills="'+b.week+'"]');
+  if(empty&&empty.parentNode) empty.parentNode.removeChild(empty);
+  $("bills-"+b.week).insertAdjacentHTML("beforeend", billRow(b));
+  syncX();updateSummaries();saveStore();
+  var el=$(name?("bill-amt-"+b.id):("bill-name-"+b.id));
+  if(el) try{el.focus();el.scrollIntoView({block:"center"});}catch(err){}
+  return b;
+}
 function findInc(id){id=+id;for(var i=0;i<incomes.length;i++) if(incomes[i].id===id) return incomes[i];return null;}
 function findBill(id){id=+id;for(var i=0;i<bills.length;i++) if(bills[i].id===id) return bills[i];return null;}
 function incomeInWeek(inc,w){if(!inc) return false;if(inc.freq==="weekly") return true;return clampWeek(inc.week)===w;}
@@ -237,7 +270,7 @@ function weekOpts(sel){
 function billRow(b){
   return '<div class="bill'+(b.paid?" paid":"")+'" id="bill-'+b.id+'" data-bill="'+b.id+'">'+
     '<div class="grid2">'+
-      '<div class="span2"><label for="bill-name-'+b.id+'">Name</label><div class="clr"><input id="bill-name-'+b.id+'" class="nm-in" type="text" autocomplete="off" data-kind="bill" data-field="name" data-id="'+b.id+'" value="'+esc(b.name)+'" placeholder="e.g. Electric"><button type="button" class="x hide" data-clear="bill-name-'+b.id+'" aria-label="Clear name">&times;</button></div></div>'+
+      '<div class="span2"><label for="bill-name-'+b.id+'">Name</label><div class="clr"><input id="bill-name-'+b.id+'" class="nm-in" type="text" autocomplete="off" list="bill-names" data-kind="bill" data-field="name" data-id="'+b.id+'" value="'+esc(b.name)+'" placeholder="e.g. Electric"><button type="button" class="x hide" data-clear="bill-name-'+b.id+'" aria-label="Clear name">&times;</button></div></div>'+
       '<div><label for="bill-amt-'+b.id+'">Amount $</label><div class="clr"><input id="bill-amt-'+b.id+'" type="text" inputmode="decimal" autocomplete="off" data-kind="bill" data-field="amount" data-id="'+b.id+'" value="'+esc(b.amount)+'" placeholder="0.00"><button type="button" class="x hide" data-clear="bill-amt-'+b.id+'" aria-label="Clear amount">&times;</button></div></div>'+
       '<div><label for="bill-due-'+b.id+'">Due date (optional)</label><input id="bill-due-'+b.id+'" type="date" data-kind="bill" data-field="due" data-id="'+b.id+'" value="'+esc(b.due)+'"></div>'+
       '<div><label for="bill-week-'+b.id+'">Week</label><select id="bill-week-'+b.id+'" data-kind="bill" data-field="week" data-id="'+b.id+'">'+weekOpts(b.week)+'</select></div>'+
@@ -249,6 +282,14 @@ function billRow(b){
     '</div>'+
   '</div>';
 }
+function billNamesList(){
+  return '<datalist id="bill-names">'+QUICK_BILLS.map(function(n){return "<option value=\""+esc(n)+"\">";}).join("")+"</datalist>";
+}
+function quickPickHTML(w){
+  return '<div class="quick" data-quick-week="'+w+'"><p class="small muted lbl">Quick pick a common bill</p><div class="chips" role="list">'+
+    QUICK_BILLS.map(function(n){return '<button type="button" data-quick-bill="'+w+'" data-quick-name="'+esc(n)+'">'+esc(n)+"</button>";}).join("")+
+  "</div></div>";
+}
 function weekSection(w){
   return '<section class="week box" id="week-'+w+'" data-week="'+w+'">'+
     '<h2>Week '+w+'</h2>'+
@@ -257,6 +298,7 @@ function weekSection(w){
     '<h3>Bills</h3>'+
     '<div id="bills-'+w+'"></div>'+
     '<div class="row"><button type="button" data-add-bill="'+w+'">Add bill</button></div>'+
+    quickPickHTML(w)+
     '<div class="wsum" id="sum-'+w+'"></div>'+
   '</section>';
 }
@@ -266,7 +308,7 @@ function renderIncomes(){
   syncX();
 }
 function renderWeekShells(){
-  var h="";
+  var h=billNamesList();
   for(var w=1;w<=4;w++) h+=weekSection(w);
   $("weeks").innerHTML=h;
 }
@@ -536,13 +578,11 @@ document.addEventListener("click",function(e){
   var t=e.target.closest&&e.target.closest("button"); if(!t) return;
   var add=t.getAttribute("data-add-bill");
   if(add){
-    var b=newBill(+add);
-    bills.push(b);
-    var empty=document.querySelector('[data-empty-bills="'+b.week+'"]');
-    if(empty&&empty.parentNode) empty.parentNode.removeChild(empty);
-    $("bills-"+b.week).insertAdjacentHTML("beforeend", billRow(b));
-    syncX();updateSummaries();saveStore();
-    var el=$("bill-name-"+b.id); if(el) try{el.focus();}catch(err){}
+    addBillToWeek(+add, "");
+    return;
+  }
+  if(t.getAttribute("data-quick-bill")){
+    addBillToWeek(+t.getAttribute("data-quick-bill"), t.getAttribute("data-quick-name")||"");
     return;
   }
   if(t.getAttribute("data-rm-income")){
@@ -613,6 +653,8 @@ window.__test={
   startNewMonth:startNewMonth, clearAll:clearAll, undoLast:undoLast, advanceMonth:advanceMonth,
   getIncomes:function(){return incomes;}, getBills:function(){return bills;},
   getMonthLabel:function(){return monthLabel;},
+  getQuickBills:function(){return QUICK_BILLS.slice();},
+  addBillToWeek:addBillToWeek, quickAmount:quickAmount,
   setConfirm:function(fn){window.confirm=fn;}
 };
 
